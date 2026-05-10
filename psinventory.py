@@ -6,14 +6,14 @@ import sys
 
 
 def read_files(directory: Path) -> list[list[dict[Any, Any]]]:
-    prop_list: list[list[dict[Any, Any]]] = []
+    prop_dict: list[list[dict[Any, Any]]] = []
     for file in directory.iterdir():
         if file.is_file:
             with open(file, "r") as f:
                 data = json.load(f)
-        prop_list.append(data.get("propList"))
+        prop_dict.append(data.get("propList"))
 
-    return prop_list
+    return prop_dict
 
 
 def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
@@ -29,11 +29,11 @@ def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
 
 
 def main():
+    path = Path(sys.argv[1])
+    prop_list = read_files(path)
+    inventory = prop_count(prop_list)
 
-    prop_list = read_files(Path(sys.argv[1]))
-    prop_dict = prop_count(prop_list)
-
-    print(json.dumps(prop_dict, indent=2))
+    print(json.dumps(inventory, indent=2))
 
 
 if __name__ == "__main__":
