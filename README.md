@@ -79,7 +79,6 @@ This creates a timestamped file in the current directory:
 
 Example Markdown content:
 
-```markdown
   | Item | Count |
   |---|---|
   | barrel-plastic-stack | 21 |
@@ -87,7 +86,7 @@ Example Markdown content:
   | faultline-8ft | 76 |
   | uspsa-full-target | 83 |
   | wall-med-color | 52 |
-```
+
 
 ### Suppress JSON Output
 
