@@ -4,6 +4,8 @@ from pathlib import Path
 from datetime import datetime as dt
 import json
 import argparse
+import csv
+import sys
 
 
 def cli_args() -> argparse.Namespace:
@@ -18,7 +20,7 @@ def cli_args() -> argparse.Namespace:
         "-c",
         "--csv",
         action="store_true",
-        help="Save inventory list to a CSV file  i the current directory.",
+        help="Save inventory list to a CSV file in the current directory.",
     )
 
     p.add_argument(
@@ -46,6 +48,7 @@ def md_out(data: dict[str, int]) -> None:
         f.write("\n| Item | Count |\n")
         f.write("|---|---|\n")
         for item, count in data.items():
+            item = item.replace("|", "\\|")
             f.write(f"| {item} | {count} |\n")
 
     print(f"\n\tMarkdown table saved to: {filename}")
@@ -54,33 +57,55 @@ def md_out(data: dict[str, int]) -> None:
 def csv_out(data: dict[str, int]) -> None:
     ts = dt.now().strftime("%Y%m%d_%H%M%S")
     filename = f"practisim-inventory_{ts}.csv"
-    with open(filename, "w") as f:
-        f.write("Item,Count\n")
-        for item, count in data.items():
-            f.write(f"{item},{count}\n")
+    header = ["Item", "Count"]
+
+    with open(filename, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(data.items())
 
     print(f"\n\tCSV data saved to: {filename}")
 
 
 def read_files(directory: Path) -> list[list[dict[Any, Any]]]:
-    prop_dict: list[list[dict[Any, Any]]] = []
+    prop_list: list[list[dict[Any, Any]]] = []
     for file in directory.iterdir():
-        if file.is_file:
-            with open(file, "r") as f:
-                data = json.load(f)
-        prop_dict.append(data.get("propList"))
+        if not file.is_file() or file.suffix.lower() != ".stg":
+            continue
 
-    return prop_dict
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Invalid JSON: {e} - {file}")
+            continue
+        except Exception as e:
+            print(f"Bad file: {e} - {file}")
+            continue
+
+        if not isinstance(data, dict):
+            continue
+
+        props = data.get("propList")
+        if not isinstance(props, list):
+            continue
+        prop_list.append(props)
+
+    return prop_list
 
 
 def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
     prop_dict: dict[str, int] = {}
     for stage in prop_list:
         for prop_name in stage:
-            if prop_name["propName"] in prop_dict:
-                prop_dict[prop_name["propName"]] += 1
-            else:
-                prop_dict[prop_name["propName"]] = 1
+            if not isinstance(prop_name, dict):
+                continue
+
+            name = prop_name.get("propName")
+            if not isinstance(name, str) or not name:
+                continue
+
+            prop_dict[name] = prop_dict.get(name, 0) + 1
 
     return dict(sorted(prop_dict.items()))
 
@@ -88,9 +113,23 @@ def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
 def main() -> None:
     args = cli_args()
 
-    path = Path(args.path)
+    path = Path(args.path).expanduser()
+    if not path.exists():
+        print(f"path does not exist: {path}")
+        sys.exit()
+    if not path.is_dir():
+        print(f"path is not a directory: {path}")
+        sys.exit()
+
     prop_list = read_files(path)
+    if not prop_list:
+        print("No items found in any of the files provided")
+        sys.exit()
+
     inventory = prop_count(prop_list)
+    if not inventory:
+        print("No items found in the inventory")
+        sys.exit()
 
     if args.quiet is False:
         print(json.dumps(inventory, indent=2))
