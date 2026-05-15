@@ -40,22 +40,7 @@ Example Output:
   }
 ```
 
-Other items present in the sample stage files include:
-
-- barrel-plastic
-- chair
-- cooper-tunnel
-- ipsc-full-target
-- ipsc-mini-popper
-- push-button
-- sedan
-- shooting-box
-- targetsusa-stomppad-classic
-- targetsusa-swinger-right
-- uspsa-bobber
-- wall-port-med-color
-
-Options
+Options:
 
 ### Save as CSV
 
