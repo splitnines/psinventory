@@ -125,4 +125,3 @@ Notes
 
 - Input files are expected to be JSON stage files containing a propList field.
 - Generated CSV and Markdown files are written to the current working directory.
-- Files under data/, test/, and practisim-personalProps-LCSC.json are ignored by Git.
