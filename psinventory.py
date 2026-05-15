@@ -42,7 +42,7 @@ def cli_args() -> argparse.Namespace:
 
 
 def md_out(data: dict[str, int]) -> None:
-    ts = dt.now().strftime("%Y%m%d_%H%M%S")
+    ts = dt.now().strftime("%Y-%m-%d_%H_%M_%S")
     filename = f"practisim-inventory_{ts}.md"
     with open(filename, "w") as f:
         f.write("\n| Item | Count |\n")
@@ -89,6 +89,7 @@ def read_files(directory: Path) -> list[list[dict[Any, Any]]]:
         props = data.get("propList")
         if not isinstance(props, list):
             continue
+
         prop_list.append(props)
 
     return prop_list
@@ -98,7 +99,7 @@ def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
     prop_dict: dict[str, int] = {}
     for stage in prop_list:
         for prop_name in stage:
-            if not isinstance(prop_name, dict):
+            if not isinstance(prop_name, dict[str, int]):
                 continue
 
             name = prop_name.get("propName")
