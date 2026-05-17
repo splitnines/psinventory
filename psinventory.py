@@ -99,9 +99,6 @@ def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
     prop_dict: dict[str, int] = {}
     for stage in prop_list:
         for prop_name in stage:
-            if not isinstance(prop_name, dict[str, int]):
-                continue
-
             name = prop_name.get("propName")
             if not isinstance(name, str) or not name:
                 continue
