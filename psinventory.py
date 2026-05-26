@@ -67,30 +67,37 @@ def csv_out(data: dict[str, int]) -> None:
     print(f"\n\tCSV data saved to: {filename}")
 
 
-def read_files(directory: Path) -> list[list[dict[Any, Any]]]:
+def get_prop_list(file: Path) -> list:
+    try:
+        with open(file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON: {e} - {file}")
+        sys.exit()
+    except Exception as e:
+        print(f"Bad file: {e} - {file}")
+        sys.exit()
+
+    if not isinstance(data, dict):
+        sys.exit()
+
+    props = data.get("propList")
+    if not isinstance(props, list):
+        sys.exit()
+
+    return props
+
+
+def read_files(path: Path) -> list[list[dict[Any, Any]]]:
     prop_list: list[list[dict[Any, Any]]] = []
-    for file in directory.iterdir():
-        if not file.is_file() or file.suffix.lower() != ".stg":
-            continue
 
-        try:
-            with open(file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except json.JSONDecodeError as e:
-            print(f"Invalid JSON: {e} - {file}")
-            continue
-        except Exception as e:
-            print(f"Bad file: {e} - {file}")
-            continue
-
-        if not isinstance(data, dict):
-            continue
-
-        props = data.get("propList")
-        if not isinstance(props, list):
-            continue
-
-        prop_list.append(props)
+    if path.is_file() and path.suffix.lower() == ".stg":
+        prop_list.append(get_prop_list(path))
+    else:
+        for file in path.iterdir():
+            if not file.is_file() or file.suffix.lower() != ".stg":
+                continue
+            prop_list.append(get_prop_list(file))
 
     return prop_list
 
@@ -114,9 +121,6 @@ def main() -> None:
     path = Path(args.path).expanduser()
     if not path.exists():
         print(f"path does not exist: {path}")
-        sys.exit()
-    if not path.is_dir():
-        print(f"path is not a directory: {path}")
         sys.exit()
 
     prop_list = read_files(path)
