@@ -2,12 +2,13 @@
 
 A small Python utility for creating an inventory list from Practisim stage files.
 
-The script reads Practisim `.STG` JSON files, extracts each stage’s `propList`, counts how many times each prop appears, and outputs the inventory as JSON, CSV, and/or Markdown.
+The script reads Practisim `.STG`/`.stg` JSON files, extracts each stage's `propList`, counts how many times each prop appears, sorts the inventory by item name, and outputs the inventory as JSON, CSV, and/or Markdown.
 
 ## Requirements
 
 - Python 3.14 or newer
-- No external Python dependencies
+- `uv`
+- No external Python package dependencies
 
 ## Project Files
 
@@ -18,80 +19,93 @@ The script reads Practisim `.STG` JSON files, extracts each stage’s `propList`
 
 ## Usage
 
-Run the inventory script with the path to a directory containing Practisim stage files:
+Run the inventory script with one or more paths to Practisim stage files or directories containing stage files:
 
 ```sh
-  python psinventory.py ./data
+uv run psinventory.py ./data
 ```
+
+You can pass a single `.stg` file:
+
+```sh
+uv run psinventory.py ./data/Stage_1.STG
+```
+
+You can also combine multiple files and directories in one command:
+
+```sh
+uv run psinventory.py ./data ./test2/test.stg ~/stages
+```
+
+For directory inputs, the script reads `.stg` files directly inside that directory. Missing paths are reported and skipped.
 
 By default, the script prints the inventory as formatted JSON.
 
 Example Output:
 
 ```json
-  {
-    "barrel-plastic-stack": 21,
-    "faultline-4ft": 48,
-    "faultline-8ft": 76,
-    "uspsa-full-target": 83,
-    "uspsa-popper": 17,
-    "wall-med-color": 52,
-    "wall-short-color": 24
-  }
+{
+  "barrel-plastic-stack": 21,
+  "faultline-4ft": 48,
+  "faultline-8ft": 76,
+  "uspsa-full-target": 83,
+  "uspsa-popper": 17,
+  "wall-med-color": 52,
+  "wall-short-color": 24
+}
 ```
 
-Options:
+## Options
 
 ### Save as CSV
 
 ```sh
-  python psinventory.py ./data --csv
+uv run psinventory.py ./data --csv
 ```
 
 This creates a timestamped file in the current directory:
 
 ```text
-  practisim-inventory_YYYYMMDD_HHMMSS.csv
+practisim-inventory_YYYYMMDD_HHMMSS.csv
 ```
 
 Example CSV content:
 
 ```csv
-  Item,Count
-  barrel-plastic-stack,21
-  faultline-4ft,48
-  faultline-8ft,76
-  uspsa-full-target,83
-  wall-med-color,52
+Item,Count
+barrel-plastic-stack,21
+faultline-4ft,48
+faultline-8ft,76
+uspsa-full-target,83
+wall-med-color,52
 ```
 
 ### Save as Markdown Table
 
 ```sh
-  python psinventory.py ./data --markdown
+uv run psinventory.py ./data --markdown
 ```
 
 This creates a timestamped file in the current directory:
 
 ```text
-  practisim-inventory_YYYYMMDD_HHMMSS.md
+practisim-inventory_YYYY-MM-DD_HH_MM_SS.md
 ```
 
 Example Markdown content:
 
-  | Item | Count |
-  |---|---|
-  | barrel-plastic-stack | 21 |
-  | faultline-4ft | 48 |
-  | faultline-8ft | 76 |
-  | uspsa-full-target | 83 |
-  | wall-med-color | 52 |
-
+| Item | Count |
+|---|---|
+| barrel-plastic-stack | 21 |
+| faultline-4ft | 48 |
+| faultline-8ft | 76 |
+| uspsa-full-target | 83 |
+| wall-med-color | 52 |
 
 ### Suppress JSON Output
 
 ```sh
-  python psinventory.py ./data --quiet
+uv run psinventory.py ./data --quiet
 ```
 
 This prevents the raw JSON inventory from being printed to the terminal.
@@ -99,29 +113,28 @@ This prevents the raw JSON inventory from being printed to the terminal.
 ### Combine Options
 
 ```sh
-  python psinventory.py ./data --csv --markdown --quiet
+uv run psinventory.py ./data ./test2/test.stg --csv --markdown --quiet
 ```
 
-Recovering Stage Files
+## Recovering Stage Files
 
 Some Practisim stage files may need to be converted from UTF-16 to UTF-8 JSON.
 
-Use stg_recover.py with the stage file path:
+Use `stg_recover.py` with the stage file path:
 
 ```sh
-  python stg_recover.py path/to/file.stg
+uv run stg_recover.py path/to/file.stg
 ```
 
 This writes a recovered file next to the original:
 
 ```text
-  path/to/file.stg.recovered
+path/to/file.stg.recovered
 ```
 
-The recovered file is decoded as UTF-16, replaces invalid \x19 characters with apostrophes, validates the result as JSON, and writes UTF-8
-output.
+The recovered file is decoded as UTF-16, replaces invalid `\x19` characters with apostrophes, validates the result as JSON, and writes UTF-8 output.
 
-Notes
+## Notes
 
-- Input files are expected to be JSON stage files containing a propList field.
+- Input files are expected to be JSON stage files containing a `propList` field.
 - Generated CSV and Markdown files are written to the current working directory.
