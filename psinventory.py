@@ -14,7 +14,7 @@ def cli_args() -> argparse.Namespace:
         description="Creates an inventory list from Practisim stage files.",
     )
 
-    p.add_argument("path", help="The path to the stage files.")
+    p.add_argument("path", nargs="+", help="The path to the stage files.")
 
     p.add_argument(
         "-c",
@@ -88,16 +88,22 @@ def get_prop_list(file: Path) -> list:
     return props
 
 
-def read_files(path: Path) -> list[list[dict[Any, Any]]]:
+def read_files(paths: list[str]) -> list[list[dict[Any, Any]]]:
     prop_list: list[list[dict[Any, Any]]] = []
 
-    if path.is_file() and path.suffix.lower() == ".stg":
-        prop_list.append(get_prop_list(path))
-    else:
-        for file in path.iterdir():
-            if not file.is_file() or file.suffix.lower() != ".stg":
-                continue
-            prop_list.append(get_prop_list(file))
+    for path in paths:
+        path = Path(path).expanduser()
+
+        if not path.exists():
+            print(f"path does not exist: {path}")
+            continue
+
+        if path.is_file() and path.suffix.lower() == ".stg":
+            prop_list.append(get_prop_list(path))
+        elif path.is_dir():
+            for file in path.iterdir():
+                if file.is_file() and file.suffix.lower() == ".stg":
+                    prop_list.append(get_prop_list(file))
 
     return prop_list
 
@@ -118,10 +124,7 @@ def prop_count(prop_list: list[list[dict[Any, Any]]]) -> dict[str, int]:
 def main() -> None:
     args = cli_args()
 
-    path = Path(args.path).expanduser()
-    if not path.exists():
-        print(f"path does not exist: {path}")
-        sys.exit()
+    path = args.path
 
     prop_list = read_files(path)
     if not prop_list:
